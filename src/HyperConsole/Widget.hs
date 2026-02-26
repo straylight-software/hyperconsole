@@ -187,19 +187,23 @@ vboxWith constraints widgets = Widget $ \dims ->
 horizontalConcat :: Dimensions -> [Canvas] -> Canvas
 horizontalConcat dims [] = emptyCanvas dims
 horizontalConcat dims canvases =
-  let maxH = maximum (1 : map (height . canvasDims) canvases)
+  let maxH = maximum (1 : map (V.length . canvasLines) canvases)
       padCanvas c =
-        let h = height (canvasDims c)
+        let h = V.length (canvasLines c)
             padding = V.replicate (max 0 (maxH - h)) Seq.empty
          in canvasLines c V.++ padding
       paddedVecs = map padCanvas canvases
-      combined = zipWithN paddedVecs
+      combined = zipWithN maxH paddedVecs
    in Canvas (V.take (height dims) combined) dims
   where
     -- Zip N vectors together by concatenating lines
-    zipWithN [] = V.empty
-    zipWithN (v0 : vs) = V.generate (V.length v0) $ \i ->
-      foldl (<>) Seq.empty [v V.! i | v <- (v0 : vs)]
+    -- Safely accesses each vector, using empty for out of bounds
+    zipWithN _ [] = V.empty
+    zipWithN len vecs = V.generate len $ \i ->
+      foldl (<>) Seq.empty [safeIndex v i | v <- vecs]
+    safeIndex v i
+      | i < V.length v = v V.! i
+      | otherwise = Seq.empty
 
 -- | Concatenate canvases vertically
 verticalConcat :: Dimensions -> [Canvas] -> Canvas
