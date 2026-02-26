@@ -373,47 +373,38 @@ progressShowcase pct tick =
           rule (fg BrightBlack) '─',
           space 0 1,
           -- Standard
-          hbox
-            [ textStyled (fg BrightBlack) "Standard:    ",
-              progress (fg Green) (fg BrightBlack) pct
-            ],
+          textStyled (fg BrightBlack) "Standard:    " <+> progress (fg Green) (fg BrightBlack) pct,
           -- Gradient
-          hbox
-            [ textStyled (fg BrightBlack) "Gradient:    ",
-              progress (gradientColor pct) (fg BrightBlack) pct
-            ],
+          textStyled (fg BrightBlack) "Gradient:    " <+> progress (gradientColor pct) (fg BrightBlack) pct,
           -- With label
-          hbox
-            [ textStyled (fg BrightBlack) "With Label:  ",
-              progressBar (fg Cyan) (fg BrightBlack) (fg White) pct
-            ],
+          textStyled (fg BrightBlack) "With Label:  " <+> progressBar (fg Cyan) (fg BrightBlack) (fg White) pct,
           space 0 1,
           rule (fg BrightBlack) '─',
           -- Gauges
-          hbox
-            [ textStyled (fg BrightBlack) "Gauges:      ",
-              gauge (fg Green) (fg Yellow) (fg Red) pct,
-              textStyled (fg BrightBlack) "  ",
-              gauge (fg Green) (fg Yellow) (fg Red) (min 1.0 (pct * 1.2)),
-              textStyled (fg BrightBlack) "  ",
-              gauge (fg Green) (fg Yellow) (fg Red) (min 1.0 (pct * 1.5)),
-              textStyled (fg BrightBlack) "  ",
-              gauge (fg Green) (fg Yellow) (fg Red) (min 1.0 (pct * 2.0))
-            ],
+          textStyled (fg BrightBlack) "Gauges:      "
+            <+> hbox
+              [ gauge (fg Green) (fg Yellow) (fg Red) pct,
+                textStyled (fg BrightBlack) "  ",
+                gauge (fg Green) (fg Yellow) (fg Red) (min 1.0 (pct * 1.2)),
+                textStyled (fg BrightBlack) "  ",
+                gauge (fg Green) (fg Yellow) (fg Red) (min 1.0 (pct * 1.5)),
+                textStyled (fg BrightBlack) "  ",
+                gauge (fg Green) (fg Yellow) (fg Red) (min 1.0 (pct * 2.0))
+              ],
           -- Spinners
           space 0 1,
-          hbox
-            [ textStyled (fg BrightBlack) "Spinners:    ",
-              spinner (fg Cyan) tick,
-              textStyled (fg BrightBlack) "  ",
-              spinnerStyle (fg Magenta) "◐◓◑◒" tick,
-              textStyled (fg BrightBlack) "  ",
-              spinnerStyle (fg Yellow) "⣾⣽⣻⢿⡿⣟⣯⣷" tick,
-              textStyled (fg BrightBlack) "  ",
-              spinnerStyle (fg Green) "←↖↑↗→↘↓↙" tick,
-              textStyled (fg BrightBlack) "  ",
-              spinnerStyle (fg Red) "▁▂▃▄▅▆▇█▇▆▅▄▃▂" tick
-            ]
+          textStyled (fg BrightBlack) "Spinners:    "
+            <+> hbox
+              [ spinner (fg Cyan) tick,
+                textStyled (fg BrightBlack) "  ",
+                spinnerStyle (fg Magenta) "◐◓◑◒" tick,
+                textStyled (fg BrightBlack) "  ",
+                spinnerStyle (fg Yellow) "⣾⣽⣻⢿⡿⣟⣯⣷" tick,
+                textStyled (fg BrightBlack) "  ",
+                spinnerStyle (fg Green) "←↖↑↗→↘↓↙" tick,
+                textStyled (fg BrightBlack) "  ",
+                spinnerStyle (fg Red) "▁▂▃▄▅▆▇█▇▆▅▄▃▂" tick
+              ]
         ]
   where
     gradientColor p

@@ -49,6 +49,8 @@ module HyperConsole.Widget
     vbox,
     hboxWith,
     vboxWith,
+    labeled,
+    (<+>),
     layers,
     conditional,
 
@@ -88,6 +90,7 @@ module HyperConsole.Widget
   )
 where
 
+import Data.Foldable (toList)
 import Data.Sequence (Seq)
 import Data.Sequence qualified as Seq
 import Data.Text (Text)
@@ -183,6 +186,33 @@ vboxWith constraints widgets = Widget $ \dims ->
       canvases = zipWith runWidget widgets childDims
    in verticalConcat dims canvases
 
+-- | Labeled row: fixed-width label + filling content
+--
+-- This is the common pattern for "Label:  [content that fills]"
+-- The label width is measured and the content takes remaining space.
+labeled :: Widget -> Widget -> Widget
+labeled label content = Widget $ \dims ->
+  let labelCanvas = runWidget label dims
+      labelWidth = measureLineWidth labelCanvas
+      contentWidth = max 0 (width dims - labelWidth)
+      contentDims = Dimensions contentWidth (height dims)
+      contentCanvas = runWidget content contentDims
+   in horizontalConcat dims [labelCanvas, contentCanvas]
+  where
+    -- Measure actual rendered width of first line
+    measureLineWidth canvas =
+      case V.toList (canvasLines canvas) of
+        [] -> 0
+        (line : _) -> sum [T.length (spanText s) | s <- toList line]
+
+-- | Infix operator for labeled rows
+--
+-- @label \<+\> content@ is equivalent to @labeled label content@
+(<+>) :: Widget -> Widget -> Widget
+(<+>) = labeled
+
+infixl 6 <+>
+
 -- | Concatenate canvases horizontally
 horizontalConcat :: Dimensions -> [Canvas] -> Canvas
 horizontalConcat dims [] = emptyCanvas dims
@@ -236,13 +266,21 @@ bordered = borderedWith '┌' '─' '┐' '│' '│' '└' '─' '┘'
 -- | Draw a border with custom characters
 borderedWith :: Char -> Char -> Char -> Char -> Char -> Char -> Char -> Char -> Widget -> Widget
 borderedWith tl top tr left right bl bot br inner = Widget $ \dims ->
-  let innerDims = Dimensions (max 0 (width dims - 2)) (max 0 (height dims - 2))
+  let innerW = max 0 (width dims - 2)
+      innerDims = Dimensions innerW (max 0 (height dims - 2))
       innerCanvas = runWidget inner innerDims
       w = width dims
       topBorder = Seq.singleton (Span defaultStyle (T.singleton tl <> T.replicate (w - 2) (T.singleton top) <> T.singleton tr))
       bottomBorder = Seq.singleton (Span defaultStyle (T.singleton bl <> T.replicate (w - 2) (T.singleton bot) <> T.singleton br))
+      -- Pad line to inner width, then wrap with borders
       wrapLine line =
-        Span defaultStyle (T.singleton left) Seq.<| (line Seq.|> Span defaultStyle (T.singleton right))
+        let lineW = sum [T.length (spanText s) | s <- toList line]
+            padding = max 0 (innerW - lineW)
+            paddedLine =
+              if padding > 0
+                then line Seq.|> Span defaultStyle (T.replicate padding " ")
+                else line
+         in Span defaultStyle (T.singleton left) Seq.<| (paddedLine Seq.|> Span defaultStyle (T.singleton right))
       wrappedLines = V.map wrapLine (canvasLines innerCanvas)
    in Canvas (V.singleton topBorder V.++ wrappedLines V.++ V.singleton bottomBorder) dims
 
@@ -411,20 +449,28 @@ paddedUniform n = padded n n n n
 -- | Bordered widget with custom style
 borderedStyled :: Style -> Widget -> Widget
 borderedStyled style inner = Widget $ \dims ->
-  let innerDims = Dimensions (max 0 (width dims - 2)) (max 0 (height dims - 2))
+  let innerW = max 0 (width dims - 2)
+      innerDims = Dimensions innerW (max 0 (height dims - 2))
       innerCanvas = runWidget inner innerDims
       w = width dims
       topBorder = Seq.singleton (Span style ("┌" <> T.replicate (w - 2) "─" <> "┐"))
       bottomBorder = Seq.singleton (Span style ("└" <> T.replicate (w - 2) "─" <> "┘"))
       wrapLine line =
-        Span style "│" Seq.<| (line Seq.|> Span style "│")
+        let lineW = sum [T.length (spanText s) | s <- toList line]
+            padding = max 0 (innerW - lineW)
+            paddedLine =
+              if padding > 0
+                then line Seq.|> Span defaultStyle (T.replicate padding " ")
+                else line
+         in Span style "│" Seq.<| (paddedLine Seq.|> Span style "│")
       wrappedLines = V.map wrapLine (canvasLines innerCanvas)
    in Canvas (V.singleton topBorder V.++ wrappedLines V.++ V.singleton bottomBorder) dims
 
 -- | Bordered widget with title
 titled :: Style -> Text -> Widget -> Widget
 titled style title inner = Widget $ \dims ->
-  let innerDims = Dimensions (max 0 (width dims - 2)) (max 0 (height dims - 2))
+  let innerW = max 0 (width dims - 2)
+      innerDims = Dimensions innerW (max 0 (height dims - 2))
       innerCanvas = runWidget inner innerDims
       w = width dims
       titleTrunc = truncateText (w - 4) title
@@ -434,7 +480,13 @@ titled style title inner = Widget $ \dims ->
       topBorder = Seq.singleton (Span style ("┌─" <> titleTrunc <> T.replicate rightPad "─" <> "┐"))
       bottomBorder = Seq.singleton (Span style ("└" <> T.replicate (w - 2) "─" <> "┘"))
       wrapLine line =
-        Span style "│" Seq.<| (line Seq.|> Span style "│")
+        let lineW = sum [T.length (spanText s) | s <- toList line]
+            padding = max 0 (innerW - lineW)
+            paddedLine =
+              if padding > 0
+                then line Seq.|> Span defaultStyle (T.replicate padding " ")
+                else line
+         in Span style "│" Seq.<| (paddedLine Seq.|> Span style "│")
       wrappedLines = V.map wrapLine (canvasLines innerCanvas)
    in Canvas (V.singleton topBorder V.++ wrappedLines V.++ V.singleton bottomBorder) dims
 

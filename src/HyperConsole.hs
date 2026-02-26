@@ -100,6 +100,8 @@ module HyperConsole
     vbox,
     hboxWith,
     vboxWith,
+    labeled,
+    (<+>),
     layers,
     conditional,
 

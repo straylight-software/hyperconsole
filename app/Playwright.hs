@@ -76,6 +76,14 @@ dumpCanvas name canvas = do
   putStrLn "Rendered:"
   TIO.putStrLn $ renderCanvasPlain canvas
 
+-- | Show actual character widths of each line
+dumpLineWidths :: Canvas -> IO ()
+dumpLineWidths canvas = do
+  putStrLn "Line widths:"
+  V.iforM_ (canvasLines canvas) $ \i line -> do
+    let totalChars = sum [T.length (spanText s) | s <- toList line]
+    putStrLn $ "  [" <> show i <> "] chars=" <> show totalChars
+
 -- ════════════════════════════════════════════════════════════════════════════
 -- Test Cases
 -- ════════════════════════════════════════════════════════════════════════════
@@ -102,6 +110,46 @@ runProgressBarPlaywright = do
   let w100 = progressBar (fg Cyan) (fg BrightBlack) (fg White) 1.0
       c100 = runWidget w100 dims
   dumpCanvas "progressBar 100%" c100
+
+  -- Test the ACTUAL pattern from the demo: hbox [text, progress]
+  putStrLn "\n--- hbox [label, progress] - THE BUG ---"
+  let wBug =
+        hbox
+          [ textStyled (fg BrightBlack) "Standard:    ",
+            progress (fg Green) (fg BrightBlack) 0.5
+          ]
+      cBug = runWidget wBug dims
+  dumpCanvas "hbox label+progress" cBug
+  dumpLineWidths cBug
+
+  -- What SHOULD happen with proper constraints
+  putStrLn "\n--- hboxWith [Exact 13, Fill 1] [label, progress] ---"
+  let wFixed =
+        hboxWith
+          [Exact 13, Fill 1]
+          [ textStyled (fg BrightBlack) "Standard:    ",
+            progress (fg Green) (fg BrightBlack) 0.5
+          ]
+      cFixed = runWidget wFixed dims
+  dumpCanvas "hboxWith fixed label" cFixed
+  dumpLineWidths cFixed
+
+  -- NEW: Using labeled combinator
+  putStrLn "\n--- labeled (THE FIX) ---"
+  let wLabeled =
+        labeled
+          (textStyled (fg BrightBlack) "Standard:    ")
+          (progress (fg Green) (fg BrightBlack) 0.5)
+      cLabeled = runWidget wLabeled dims
+  dumpCanvas "labeled combinator" cLabeled
+  dumpLineWidths cLabeled
+
+  -- NEW: Using <+> operator
+  putStrLn "\n--- Using <+> operator ---"
+  let wOp = textStyled (fg BrightBlack) "Standard:    " <+> progress (fg Green) (fg BrightBlack) 0.5
+      cOp = runWidget wOp dims
+  dumpCanvas "<+> operator" cOp
+  dumpLineWidths cOp
 
 runHboxMixedPlaywright :: IO ()
 runHboxMixedPlaywright = do
@@ -135,6 +183,7 @@ runProgressPlaywright = do
   let w = progressShowcase pct tick
       c = runWidget w dims
   dumpCanvas "progressShowcase" c
+  dumpLineWidths c
 
 -- ════════════════════════════════════════════════════════════════════════════
 -- Widgets (copied from Demo.hs for isolation)
@@ -148,48 +197,39 @@ progressShowcase pct tick =
         [ textStyled (bold (fg BrightWhite)) "Progress Bar Showcase",
           rule (fg BrightBlack) '─',
           space 0 1,
-          -- Standard
-          hbox
-            [ textStyled (fg BrightBlack) "Standard:    ",
-              progress (fg Green) (fg BrightBlack) pct
-            ],
+          -- Standard (FIXED: using <+>)
+          textStyled (fg BrightBlack) "Standard:    " <+> progress (fg Green) (fg BrightBlack) pct,
           -- Gradient
-          hbox
-            [ textStyled (fg BrightBlack) "Gradient:    ",
-              progress (gradientColor pct) (fg BrightBlack) pct
-            ],
+          textStyled (fg BrightBlack) "Gradient:    " <+> progress (gradientColor pct) (fg BrightBlack) pct,
           -- With label
-          hbox
-            [ textStyled (fg BrightBlack) "With Label:  ",
-              progressBar (fg Cyan) (fg BrightBlack) (fg White) pct
-            ],
+          textStyled (fg BrightBlack) "With Label:  " <+> progressBar (fg Cyan) (fg BrightBlack) (fg White) pct,
           space 0 1,
           rule (fg BrightBlack) '─',
           -- Gauges
-          hbox
-            [ textStyled (fg BrightBlack) "Gauges:      ",
-              gauge (fg Green) (fg Yellow) (fg Red) pct,
-              textStyled (fg BrightBlack) "  ",
-              gauge (fg Green) (fg Yellow) (fg Red) (min 1.0 (pct * 1.2)),
-              textStyled (fg BrightBlack) "  ",
-              gauge (fg Green) (fg Yellow) (fg Red) (min 1.0 (pct * 1.5)),
-              textStyled (fg BrightBlack) "  ",
-              gauge (fg Green) (fg Yellow) (fg Red) (min 1.0 (pct * 2.0))
-            ],
+          textStyled (fg BrightBlack) "Gauges:      "
+            <+> hbox
+              [ gauge (fg Green) (fg Yellow) (fg Red) pct,
+                textStyled (fg BrightBlack) "  ",
+                gauge (fg Green) (fg Yellow) (fg Red) (min 1.0 (pct * 1.2)),
+                textStyled (fg BrightBlack) "  ",
+                gauge (fg Green) (fg Yellow) (fg Red) (min 1.0 (pct * 1.5)),
+                textStyled (fg BrightBlack) "  ",
+                gauge (fg Green) (fg Yellow) (fg Red) (min 1.0 (pct * 2.0))
+              ],
           -- Spinners
           space 0 1,
-          hbox
-            [ textStyled (fg BrightBlack) "Spinners:    ",
-              spinner (fg Cyan) tick,
-              textStyled (fg BrightBlack) "  ",
-              spinnerStyle (fg Magenta) "◐◓◑◒" tick,
-              textStyled (fg BrightBlack) "  ",
-              spinnerStyle (fg Yellow) "⣾⣽⣻⢿⡿⣟⣯⣷" tick,
-              textStyled (fg BrightBlack) "  ",
-              spinnerStyle (fg Green) "←↖↑↗→↘↓↙" tick,
-              textStyled (fg BrightBlack) "  ",
-              spinnerStyle (fg Red) "▁▂▃▄▅▆▇█▇▆▅▄▃▂" tick
-            ]
+          textStyled (fg BrightBlack) "Spinners:    "
+            <+> hbox
+              [ spinner (fg Cyan) tick,
+                textStyled (fg BrightBlack) "  ",
+                spinnerStyle (fg Magenta) "◐◓◑◒" tick,
+                textStyled (fg BrightBlack) "  ",
+                spinnerStyle (fg Yellow) "⣾⣽⣻⢿⡿⣟⣯⣷" tick,
+                textStyled (fg BrightBlack) "  ",
+                spinnerStyle (fg Green) "←↖↑↗→↘↓↙" tick,
+                textStyled (fg BrightBlack) "  ",
+                spinnerStyle (fg Red) "▁▂▃▄▅▆▇█▇▆▅▄▃▂" tick
+              ]
         ]
   where
     gradientColor p
