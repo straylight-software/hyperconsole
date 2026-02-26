@@ -292,6 +292,30 @@ adversarialTests =
           V.length (canvasLines canvas) @?= 1,
         testCase "progress out of bounds high" $ do
           let canvas = runWidget (progress defaultStyle defaultStyle 2.0) (Dimensions 10 1)
+          V.length (canvasLines canvas) @?= 1,
+        testCase "hbox with mixed height widgets" $ do
+          -- This tests the horizontal concat with widgets of different heights
+          let w =
+                hbox
+                  [ vbox [text "a", text "b", text "c"], -- 3 lines
+                    text "x", -- 1 line
+                    vbox [text "1", text "2"] -- 2 lines
+                  ]
+              canvas = runWidget w (Dimensions 100 10)
+          V.length (canvasLines canvas) >= 1 @?= True,
+        testCase "hbox with empty and non-empty widgets" $ do
+          let w = hbox [empty, text "x", empty, text "y"]
+              canvas = runWidget w (Dimensions 100 10)
+          V.length (canvasLines canvas) >= 1 @?= True,
+        testCase "progress showcase pattern" $ do
+          -- Replicates the pattern from Demo.hs progressShowcase
+          let w =
+                hbox
+                  [ text "Label:  ",
+                    progress defaultStyle defaultStyle 0.5,
+                    text " 50%"
+                  ]
+              canvas = runWidget w (Dimensions 100 10)
           V.length (canvasLines canvas) @?= 1
       ],
     testGroup
