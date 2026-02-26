@@ -24,11 +24,12 @@ library
   exposed-modules:
     HyperConsole
     HyperConsole.Layout
-    HyperConsole.Widget
     HyperConsole.Style
     HyperConsole.Terminal
-    HyperConsole.Terminal.IoUring
     HyperConsole.Terminal.Evring
+    HyperConsole.Terminal.IoUring
+    HyperConsole.Theme
+    HyperConsole.Widget
 
   other-modules:
     HyperConsole.Unicode

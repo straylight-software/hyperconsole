@@ -159,6 +159,44 @@ module HyperConsole
     bg,
     rgb,
 
+    -- * Straylight Theme
+
+    -- | Tasteful defaults based on straylight typography.
+    -- See "HyperConsole.Theme" for documentation.
+    themePrimary,
+    themeSecondary,
+    themeAccent,
+    themeSuccess,
+    themeWarning,
+    themeError,
+    themeMuted,
+    themeBorder,
+    themeTitle,
+    themeLabel,
+    themeValue,
+    themeSelected,
+    themeHeader,
+    themeProgressFilled,
+    themeProgressEmpty,
+    themeSpinner,
+    themeStatusOk,
+    themeStatusPending,
+    themeStatusFailed,
+    themeStatusCached,
+    boxLight,
+    boxHeavy,
+    boxDouble,
+    boxRounded,
+    glyphCheck,
+    glyphCross,
+    glyphArrow,
+    glyphBullet,
+    glyphSpinner,
+    glyphProgress,
+    glyphProgressEmpty,
+    glyphCached,
+    glyphBuilding,
+
     -- * Unicode utilities
     displayWidth,
     charWidth,
@@ -177,5 +215,6 @@ where
 import HyperConsole.Layout
 import HyperConsole.Style
 import HyperConsole.Terminal
+import HyperConsole.Theme
 import HyperConsole.Unicode
 import HyperConsole.Widget
