@@ -162,11 +162,23 @@ cursorColumn :: Int -> ByteString
 cursorColumn n = "\ESC[" <> BS.pack (map (fromIntegral . fromEnum) (show n)) <> "G"
 
 -- | Clear operations
+-- | Clear entire line (causes flicker - prefer clearToEOL)
 clearLine :: ByteString
 clearLine = "\ESC[2K"
 
+-- | Clear from cursor to end of line (no flicker)
+clearToEOL :: ByteString
+clearToEOL = "\ESC[K"
+
 clearDown :: ByteString
 clearDown = "\ESC[J"
+
+-- | Synchronized update (prevents flicker in tmux/kitty/etc.)
+beginSync :: ByteString
+beginSync = "\ESC[?2026h"
+
+endSync :: ByteString
+endSync = "\ESC[?2026l"
 
 -- | Cursor visibility
 hideCursor :: ByteString
@@ -322,6 +334,9 @@ renderEvring EvringConsole {..} widget = withMVar ecLock $ \_ -> do
 
   -- Build frame in buffer (no syscalls yet)
 
+  -- 0. Begin synchronized update (prevents flicker)
+  writeEscape ecFrameBuffer beginSync
+
   -- 1. Move cursor up to overwrite old canvas
   let oldHeight = V.length (canvasLines oldCanvas)
   when (oldHeight > 0) $ do
@@ -335,6 +350,9 @@ renderEvring EvringConsole {..} widget = withMVar ecLock $ \_ -> do
 
   -- 3. Render new canvas with diff optimization
   renderCanvasDiffToBuffer ecFrameBuffer oldCanvas newCanvas
+
+  -- 4. End synchronized update
+  writeEscape ecFrameBuffer endSync
 
   -- 4. Single syscall to write entire frame
   flushFrame ecFrameBuffer ecFd
@@ -366,8 +384,14 @@ clearEvring EvringConsole {..} = withMVar ecLock $ \_ -> do
 -- | Render a line to the frame buffer
 renderLineToBuffer :: FrameBuffer -> Line -> IO ()
 renderLineToBuffer fb line = do
-  forM_ line $ \s -> writeSpan fb s
-  writeReset fb
+  forM_ line $ \s -> writeSpanNoReset fb s
+  writeReset fb  -- Single reset at end of line
+
+-- | Write span without reset (for consecutive spans)
+writeSpanNoReset :: FrameBuffer -> Span -> IO ()
+writeSpanNoReset fb Span {..} = do
+  writeStyle fb spanStyle
+  writeText fb spanText
 
 -- | Render canvas with diff optimization
 renderCanvasDiffToBuffer :: FrameBuffer -> Canvas -> Canvas -> IO ()
@@ -383,15 +407,17 @@ renderCanvasDiffToBuffer fb oldCanvas newCanvas = do
     case (oldLine, newLine) of
       (Just old, Just new)
         | old == new -> do
-            -- Line unchanged, just newline
+            -- Line unchanged, move to next line
             writeLine fb
       (_, Just new) -> do
-        -- Line changed, clear and render
-        writeEscape fb clearLine
+        -- Line changed: move to column 0, render, clear remainder
+        writeEscape fb (cursorColumn 0)
         renderLineToBuffer fb new
+        writeEscape fb clearToEOL
         writeLine fb
       (Just _, Nothing) -> do
-        -- Line removed
-        writeEscape fb clearLine
+        -- Line removed: clear it
+        writeEscape fb (cursorColumn 0)
+        writeEscape fb clearToEOL
         writeLine fb
       (Nothing, Nothing) -> pure ()

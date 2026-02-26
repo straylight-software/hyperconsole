@@ -129,6 +129,7 @@ executable sensenet
     , containers   >= 0.6
     , hyperconsole
     , text         >= 2.0
+    , time         >= 1.12
     , vector       >= 0.13
 
   ghc-options:      -Wall -threaded -rtsopts -with-rtsopts=-N
