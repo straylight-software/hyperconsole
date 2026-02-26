@@ -239,7 +239,9 @@ horizontalConcat dims canvases =
 verticalConcat :: Dimensions -> [Canvas] -> Canvas
 verticalConcat dims canvases =
   let allLines = V.concat (map canvasLines canvases)
-   in Canvas (V.take (height dims) allLines) dims
+      -- Use actual line count, not requested height (avoids padding)
+      actualHeight = V.length allLines
+   in Canvas (V.take (height dims) allLines) (Dimensions (width dims) (min actualHeight (height dims)))
 
 -- ════════════════════════════════════════════════════════════════════════════
 -- Decorators
