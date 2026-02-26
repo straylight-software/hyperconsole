@@ -76,6 +76,20 @@ module HyperConsole.Theme
     aurora3,
     aurora4,
 
+    -- * Palette — Razorgirl Colors
+    razorBg,
+    razorSurface,
+    razorMuted,
+    razorInfo,
+    razorBright,
+    razorAccent,
+    razorDim,
+    razorRule,
+    razorMiss,
+    razorHit,
+    razorCached,
+    razorExec,
+
     -- * Semantic Styles
     -- $semantic
     themePrimary,
@@ -249,6 +263,63 @@ aurora4 = rgb8 0xB4 0x8E 0xAD
 -- | Helper for RGB colors
 rgb8 :: Word8 -> Word8 -> Word8 -> Style
 rgb8 r g b = fg (RGB r g b)
+
+-- ════════════════════════════════════════════════════════════════════════════
+-- Ono-Sendai Razorgirl Palette
+-- ════════════════════════════════════════════════════════════════════════════
+
+-- | Razorgirl palette — darker, sharper aesthetic
+--
+-- Derived from the ono-sendai console aesthetic:
+-- Darker backgrounds, sharper blues, minimal color.
+
+-- | @#111417@ — Deep background
+razorBg :: Style
+razorBg = rgb8 0x11 0x14 0x17
+
+-- | @#1a1e23@ — Surface (cards, panels)
+razorSurface :: Style
+razorSurface = rgb8 0x1a 0x1e 0x23
+
+-- | @#596775@ — Muted text
+razorMuted :: Style
+razorMuted = rgb8 0x59 0x67 0x75
+
+-- | @#80ccff@ — Info blue
+razorInfo :: Style
+razorInfo = rgb8 0x80 0xcc 0xff
+
+-- | @#b6e3ff@ — Bright text
+razorBright :: Style
+razorBright = rgb8 0xb6 0xe3 0xff
+
+-- | @#54aeff@ — Accent blue
+razorAccent :: Style
+razorAccent = rgb8 0x54 0xae 0xff
+
+-- | @#2a3340@ — Dim elements
+razorDim :: Style
+razorDim = rgb8 0x2a 0x33 0x40
+
+-- | @#242a32@ — Rules, borders
+razorRule :: Style
+razorRule = rgb8 0x24 0x2a 0x32
+
+-- | @#ff6b6b@ — Miss/error red
+razorMiss :: Style
+razorMiss = rgb8 0xff 0x6b 0x6b
+
+-- | @#3fb950@ — Hit/success green
+razorHit :: Style
+razorHit = rgb8 0x3f 0xb9 0x50
+
+-- | @#8b949e@ — Cached/neutral gray
+razorCached :: Style
+razorCached = rgb8 0x8b 0x94 0x9e
+
+-- | @#d29922@ — Executing/active amber
+razorExec :: Style
+razorExec = rgb8 0xd2 0x99 0x22
 
 -- ════════════════════════════════════════════════════════════════════════════
 -- Semantic Styles
