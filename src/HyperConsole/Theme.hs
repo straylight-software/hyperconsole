@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE StrictData #-}
 
--- | Straylight theme - tasteful defaults for terminal UI
+-- | Straylight Theme — tasteful defaults for terminal UI
 --
 -- "The sky above the port was the color of television,
 --  tuned to a dead channel."
@@ -13,66 +13,96 @@
 -- The straylight aesthetic is defined by:
 --
 --   * __Restraint__ — Minimal color, maximum clarity
---   * __Cool tones__ — Cyan and blue for action, warmth reserved for attention
+--   * __Cool tones__ — Cyan primary, warmth reserved for warnings
 --   * __Hierarchy__ — Dim for secondary, bright for primary
 --   * __Monospace harmony__ — Typography that breathes
 --
 -- = Color Palette
 --
--- The palette is derived from terminal colors that work across
--- dark and light themes, with semantic meaning:
+-- The palette derives from Nord, adapted for terminals:
 --
 -- @
--- ┌────────────┬────────────┬─────────────────────────────┐
--- │ Semantic   │ Color      │ Usage                       │
--- ├────────────┼────────────┼─────────────────────────────┤
--- │ primary    │ white      │ Main content, emphasis      │
--- │ secondary  │ bright black│ Subdued, metadata          │
--- │ accent     │ cyan       │ Actions, progress, links    │
--- │ success    │ green      │ Completion, checkmarks      │
--- │ warning    │ yellow     │ Caution, deprecation        │
--- │ error      │ red        │ Failures, blocking issues   │
--- │ muted      │ dim white  │ Borders, separators         │
--- └────────────┴────────────┴─────────────────────────────┘
+-- ┌────────────┬────────────┬────────────────────────────────┐
+-- │ Name       │ Hex        │ Usage                          │
+-- ├────────────┼────────────┼────────────────────────────────┤
+-- │ polar0     │ #2E3440    │ Background (dark)              │
+-- │ polar1     │ #3B4252    │ Elevated surfaces              │
+-- │ polar2     │ #434C5E    │ Borders, subtle                │
+-- │ polar3     │ #4C566A    │ Comments, muted text           │
+-- │ snow0      │ #D8DEE9    │ Primary text                   │
+-- │ snow1      │ #E5E9F0    │ Subtle emphasis                │
+-- │ snow2      │ #ECEFF4    │ High emphasis                  │
+-- │ frost0     │ #8FBCBB    │ Accent, teal                   │
+-- │ frost1     │ #88C0D0    │ Primary action, cyan           │
+-- │ frost2     │ #81A1C1    │ Secondary action, blue         │
+-- │ frost3     │ #5E81AC    │ Tertiary, deep blue            │
+-- │ aurora0    │ #BF616A    │ Error, red                     │
+-- │ aurora1    │ #D08770    │ Warning, orange                │
+-- │ aurora2    │ #EBCB8B    │ Caution, yellow                │
+-- │ aurora3    │ #A3BE8C    │ Success, green                 │
+-- │ aurora4    │ #B48EAD    │ Special, purple                │
+-- └────────────┴────────────┴────────────────────────────────┘
 -- @
 --
 -- = Usage
 --
 -- @
--- import HyperConsole
 -- import HyperConsole.Theme
 --
--- main = do
---   let widget = vbox
---         [ textStyled themePrimary "sensenet"
---         , textStyled themeSecondary "v0.4.0"
---         , progressBar themeProgressFilled themeProgressEmpty themeSecondary 0.75
---         ]
---   ...
+-- -- Semantic styles adapt to meaning
+-- textStyled themeSuccess "Build complete"
+-- textStyled themeError "Build failed"
+--
+-- -- Direct palette access for custom needs
+-- textStyled (fg frost1) "Custom cyan text"
 -- @
 module HyperConsole.Theme
-  ( -- * Semantic Styles
+  ( -- * Palette — Nord Colors
+    -- $palette
+    polar0,
+    polar1,
+    polar2,
+    polar3,
+    snow0,
+    snow1,
+    snow2,
+    frost0,
+    frost1,
+    frost2,
+    frost3,
+    aurora0,
+    aurora1,
+    aurora2,
+    aurora3,
+    aurora4,
+
+    -- * Semantic Styles
     -- $semantic
     themePrimary,
     themeSecondary,
+    themeTertiary,
     themeAccent,
     themeSuccess,
     themeWarning,
     themeError,
     themeMuted,
+    themeSubtle,
 
     -- * UI Element Styles
     -- $elements
     themeBorder,
+    themeBorderActive,
     themeTitle,
     themeLabel,
     themeValue,
     themeSelected,
     themeHeader,
+    themePlaceholder,
 
     -- * Progress Styles
     themeProgressFilled,
     themeProgressEmpty,
+    themeProgressText,
     themeSpinner,
 
     -- * Status Styles
@@ -80,6 +110,7 @@ module HyperConsole.Theme
     themeStatusPending,
     themeStatusFailed,
     themeStatusCached,
+    themeStatusSkipped,
 
     -- * Box Drawing
     -- $boxdrawing
@@ -87,90 +118,214 @@ module HyperConsole.Theme
     boxHeavy,
     boxDouble,
     boxRounded,
+    boxAscii,
 
     -- * Glyphs
     -- $glyphs
     glyphCheck,
     glyphCross,
     glyphArrow,
+    glyphArrowRight,
+    glyphArrowDown,
     glyphBullet,
+    glyphDot,
     glyphSpinner,
     glyphProgress,
     glyphProgressEmpty,
+    glyphProgressPartial,
     glyphCached,
     glyphBuilding,
+    glyphPending,
+    glyphInfo,
+    glyphWarning,
+    glyphError,
+
+    -- * Typography
+    -- $typography
+    em,
+    nbsp,
+    thinSpace,
+    hairSpace,
+    enDash,
+    emDash,
+    ellipsis,
   )
 where
 
 import Data.Text (Text)
+import Data.Word (Word8)
 import HyperConsole.Style
+
+-- ════════════════════════════════════════════════════════════════════════════
+-- Palette — Nord-derived colors
+-- ════════════════════════════════════════════════════════════════════════════
+
+-- $palette
+-- The straylight palette is derived from Nord, a arctic, north-bluish
+-- color palette. These are the raw colors — use semantic styles when possible.
+--
+-- True-color (24-bit) RGB values for modern terminals.
+
+-- | Polar Night — dark backgrounds
+--
+-- The darkest colors, used for backgrounds and contrast.
+
+-- | @#2E3440@ — Base background
+polar0 :: Style
+polar0 = rgb8 0x2E 0x34 0x40
+
+-- | @#3B4252@ — Elevated surface (panels, cards)
+polar1 :: Style
+polar1 = rgb8 0x3B 0x42 0x52
+
+-- | @#434C5E@ — Borders, separators
+polar2 :: Style
+polar2 = rgb8 0x43 0x4C 0x5E
+
+-- | @#4C566A@ — Comments, disabled, muted
+polar3 :: Style
+polar3 = rgb8 0x4C 0x56 0x6A
+
+-- | Snow Storm — light text
+--
+-- Light colors for text on dark backgrounds.
+
+-- | @#D8DEE9@ — Primary text
+snow0 :: Style
+snow0 = rgb8 0xD8 0xDE 0xE9
+
+-- | @#E5E9F0@ — Emphasized text
+snow1 :: Style
+snow1 = rgb8 0xE5 0xE9 0xF0
+
+-- | @#ECEFF4@ — High emphasis, headings
+snow2 :: Style
+snow2 = rgb8 0xEC 0xEF 0xF4
+
+-- | Frost — cool accent colors
+--
+-- The signature straylight colors — various shades of blue/cyan.
+
+-- | @#8FBCBB@ — Teal accent
+frost0 :: Style
+frost0 = rgb8 0x8F 0xBC 0xBB
+
+-- | @#88C0D0@ — Cyan primary — the straylight signature
+frost1 :: Style
+frost1 = rgb8 0x88 0xC0 0xD0
+
+-- | @#81A1C1@ — Blue secondary
+frost2 :: Style
+frost2 = rgb8 0x81 0xA1 0xC1
+
+-- | @#5E81AC@ — Deep blue tertiary
+frost3 :: Style
+frost3 = rgb8 0x5E 0x81 0xAC
+
+-- | Aurora — warm accent colors
+--
+-- Used sparingly for status and attention.
+
+-- | @#BF616A@ — Error red
+aurora0 :: Style
+aurora0 = rgb8 0xBF 0x61 0x6A
+
+-- | @#D08770@ — Warning orange
+aurora1 :: Style
+aurora1 = rgb8 0xD0 0x87 0x70
+
+-- | @#EBCB8B@ — Caution yellow
+aurora2 :: Style
+aurora2 = rgb8 0xEB 0xCB 0x8B
+
+-- | @#A3BE8C@ — Success green
+aurora3 :: Style
+aurora3 = rgb8 0xA3 0xBE 0x8C
+
+-- | @#B48EAD@ — Special purple
+aurora4 :: Style
+aurora4 = rgb8 0xB4 0x8E 0xAD
+
+-- | Helper for RGB colors
+rgb8 :: Word8 -> Word8 -> Word8 -> Style
+rgb8 r g b = fg (RGB r g b)
 
 -- ════════════════════════════════════════════════════════════════════════════
 -- Semantic Styles
 -- ════════════════════════════════════════════════════════════════════════════
 
 -- $semantic
--- Core semantic styles that convey meaning through color.
--- These work on both dark and light terminal backgrounds.
+-- Semantic styles convey meaning. Use these instead of raw colors
+-- so the theme can be changed consistently.
 
--- | Primary content — the main focus
+-- | Primary content — main text, important values
 --
--- White text, default weight. Use for headings, important values,
--- and anything the user should see first.
+-- Snow white on dark terminals. The default reading experience.
 themePrimary :: Style
-themePrimary = fg White
+themePrimary = snow0
 
--- | Secondary content — supporting information
+-- | Secondary content — supporting info, metadata
 --
--- Bright black (dark gray). Use for metadata, timestamps,
--- file paths, and context that supports but doesn't compete.
+-- Muted but legible. Timestamps, paths, context.
 themeSecondary :: Style
-themeSecondary = fg BrightBlack
+themeSecondary = polar3
 
--- | Accent — calls to action, links, in-progress
+-- | Tertiary content — even more subdued
 --
--- Cyan. The signature straylight color. Use for:
--- * Active/in-progress operations
+-- Decorative elements, de-emphasized info.
+themeTertiary :: Style
+themeTertiary = dim polar3
+
+-- | Accent — primary action color
+--
+-- Frost cyan. The straylight signature. Use for:
+-- * In-progress operations
 -- * Interactive elements
--- * Emphasis within body text
+-- * Links and calls to action
 themeAccent :: Style
-themeAccent = fg Cyan
+themeAccent = frost1
 
 -- | Success — completion, confirmation
 --
--- Green. Use sparingly for:
--- * Build success
+-- Aurora green. Use sparingly:
+-- * Build succeeded
 -- * Tests passed
--- * Operations completed
+-- * Action completed
 themeSuccess :: Style
-themeSuccess = fg Green
+themeSuccess = aurora3
 
--- | Warning — caution, non-blocking issues
+-- | Warning — caution, non-blocking
 --
--- Yellow. Use for:
+-- Aurora orange. Draws attention without alarm:
 -- * Deprecation notices
--- * Non-fatal warnings
--- * Things that need attention but aren't errors
+-- * Performance warnings
+-- * Things that need attention
 themeWarning :: Style
-themeWarning = fg Yellow
+themeWarning = aurora1
 
--- | Error — failures, blocking issues
+-- | Error — failure, blocking
 --
--- Red, bright. The only "loud" color. Use for:
--- * Build failures
--- * Test failures
--- * Fatal errors
+-- Aurora red. The only "loud" color:
+-- * Build failed
+-- * Test failed
+-- * Fatal error
 themeError :: Style
-themeError = fg BrightRed
+themeError = aurora0
 
--- | Muted — decorative, structural
+-- | Muted — structural, decorative
 --
--- Dim white. Use for:
--- * Borders and boxes
+-- Dim polar. For structure that shouldn't compete:
+-- * Borders
 -- * Separators
--- * Background structure
+-- * Background elements
 themeMuted :: Style
-themeMuted = dim (fg White)
+themeMuted = polar2
+
+-- | Subtle — barely visible structural elements
+--
+-- Even more subdued than muted.
+themeSubtle :: Style
+themeSubtle = dim polar2
 
 -- ════════════════════════════════════════════════════════════════════════════
 -- UI Element Styles
@@ -179,29 +334,37 @@ themeMuted = dim (fg White)
 -- $elements
 -- Styles for common UI elements.
 
--- | Border style — box drawing characters
+-- | Border — box drawing characters
 themeBorder :: Style
-themeBorder = fg BrightBlack
+themeBorder = polar2
 
--- | Title style — section headers in boxes
+-- | Active border — focused element
+themeBorderActive :: Style
+themeBorderActive = frost2
+
+-- | Title — section headings
 themeTitle :: Style
-themeTitle = bold (fg White)
+themeTitle = bold snow2
 
--- | Label style — keys in key-value pairs
+-- | Label — keys in key-value pairs
 themeLabel :: Style
-themeLabel = fg BrightBlack
+themeLabel = polar3
 
--- | Value style — values in key-value pairs
+-- | Value — values in key-value pairs
 themeValue :: Style
-themeValue = fg White
+themeValue = snow0
 
--- | Selected item — highlighted in a list
+-- | Selected — highlighted list item
 themeSelected :: Style
-themeSelected = bold (bg BrightBlack <> fg White)
+themeSelected = bold frost1 <> bg (RGB 0x3B 0x42 0x52)
 
--- | Table header
+-- | Header — table headers, column names
 themeHeader :: Style
-themeHeader = bold (fg Cyan)
+themeHeader = bold frost2
+
+-- | Placeholder — empty state, hints
+themePlaceholder :: Style
+themePlaceholder = italic polar3
 
 -- ════════════════════════════════════════════════════════════════════════════
 -- Progress Styles
@@ -209,15 +372,19 @@ themeHeader = bold (fg Cyan)
 
 -- | Filled portion of progress bar
 themeProgressFilled :: Style
-themeProgressFilled = fg Cyan
+themeProgressFilled = frost1
 
 -- | Empty portion of progress bar
 themeProgressEmpty :: Style
-themeProgressEmpty = fg BrightBlack
+themeProgressEmpty = polar2
 
--- | Spinner style
+-- | Progress text (percentage, counts)
+themeProgressText :: Style
+themeProgressText = polar3
+
+-- | Spinner — animated indicator
 themeSpinner :: Style
-themeSpinner = fg Cyan
+themeSpinner = frost1
 
 -- ════════════════════════════════════════════════════════════════════════════
 -- Status Styles
@@ -225,29 +392,33 @@ themeSpinner = fg Cyan
 
 -- | OK/success status
 themeStatusOk :: Style
-themeStatusOk = fg Green
+themeStatusOk = aurora3
 
 -- | Pending/in-progress status
 themeStatusPending :: Style
-themeStatusPending = fg Cyan
+themeStatusPending = frost1
 
 -- | Failed status
 themeStatusFailed :: Style
-themeStatusFailed = fg BrightRed
+themeStatusFailed = aurora0
 
--- | Cached/skipped status
+-- | Cached/reused status
 themeStatusCached :: Style
-themeStatusCached = fg BrightBlack
+themeStatusCached = frost0
+
+-- | Skipped/not applicable
+themeStatusSkipped :: Style
+themeStatusSkipped = polar3
 
 -- ════════════════════════════════════════════════════════════════════════════
--- Box Drawing Characters
+-- Box Drawing
 -- ════════════════════════════════════════════════════════════════════════════
 
 -- $boxdrawing
--- Unicode box drawing character sets for borders.
--- Each set provides (topLeft, top, topRight, left, right, bottomLeft, bottom, bottomRight)
+-- Unicode box drawing character sets.
+-- Tuple order: (topLeft, top, topRight, left, right, bottomLeft, bottom, bottomRight)
 
--- | Light box drawing (single line)
+-- | Light — single line, clean
 --
 -- @
 -- ┌──────┐
@@ -257,7 +428,7 @@ themeStatusCached = fg BrightBlack
 boxLight :: (Char, Char, Char, Char, Char, Char, Char, Char)
 boxLight = ('┌', '─', '┐', '│', '│', '└', '─', '┘')
 
--- | Heavy box drawing (thick lines)
+-- | Heavy — thick lines, emphasis
 --
 -- @
 -- ┏━━━━━━┓
@@ -267,7 +438,7 @@ boxLight = ('┌', '─', '┐', '│', '│', '└', '─', '┘')
 boxHeavy :: (Char, Char, Char, Char, Char, Char, Char, Char)
 boxHeavy = ('┏', '━', '┓', '┃', '┃', '┗', '━', '┛')
 
--- | Double box drawing
+-- | Double — formal, documents
 --
 -- @
 -- ╔══════╗
@@ -277,7 +448,7 @@ boxHeavy = ('┏', '━', '┓', '┃', '┃', '┗', '━', '┛')
 boxDouble :: (Char, Char, Char, Char, Char, Char, Char, Char)
 boxDouble = ('╔', '═', '╗', '║', '║', '╚', '═', '╝')
 
--- | Rounded box drawing (curved corners)
+-- | Rounded — soft, friendly
 --
 -- @
 -- ╭──────╮
@@ -287,52 +458,130 @@ boxDouble = ('╔', '═', '╗', '║', '║', '╚', '═', '╝')
 boxRounded :: (Char, Char, Char, Char, Char, Char, Char, Char)
 boxRounded = ('╭', '─', '╮', '│', '│', '╰', '─', '╯')
 
+-- | ASCII — fallback for limited fonts
+--
+-- @
+-- +------+
+-- |      |
+-- +------+
+-- @
+boxAscii :: (Char, Char, Char, Char, Char, Char, Char, Char)
+boxAscii = ('+', '-', '+', '|', '|', '+', '-', '+')
+
 -- ════════════════════════════════════════════════════════════════════════════
 -- Glyphs
 -- ════════════════════════════════════════════════════════════════════════════
 
 -- $glyphs
--- Unicode glyphs for common UI elements.
--- These are chosen for:
--- * Wide terminal support (most fonts have these)
--- * Clear meaning at small sizes
+-- Unicode glyphs for UI elements. Chosen for:
+--
+-- * Wide font support (Nerd Fonts not required)
+-- * Clear meaning at terminal sizes
 -- * Visual harmony in monospace
 
--- | Checkmark — success, done, enabled
+-- | Success checkmark
 glyphCheck :: Text
 glyphCheck = "✓"
 
--- | Cross — failure, error, disabled
+-- | Failure cross
 glyphCross :: Text
 glyphCross = "✗"
 
--- | Arrow — output, result, points to
+-- | Generic arrow
 glyphArrow :: Text
 glyphArrow = "→"
 
--- | Bullet — list item
+-- | Right-pointing arrow
+glyphArrowRight :: Text
+glyphArrowRight = "›"
+
+-- | Down-pointing arrow
+glyphArrowDown :: Text
+glyphArrowDown = "↓"
+
+-- | List bullet
 glyphBullet :: Text
 glyphBullet = "•"
 
--- | Spinner frames — animated progress indicator
+-- | Small dot (for subtle markers)
+glyphDot :: Text
+glyphDot = "·"
+
+-- | Spinner frames — Braille pattern
 --
--- Braille pattern spinner (smooth rotation):
--- ⠋ ⠙ ⠹ ⠸ ⠼ ⠴ ⠦ ⠧ ⠇ ⠏
+-- Smooth 10-frame rotation:
+-- @⠋ ⠙ ⠹ ⠸ ⠼ ⠴ ⠦ ⠧ ⠇ ⠏@
 glyphSpinner :: Text
 glyphSpinner = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
 
--- | Progress filled block
+-- | Progress bar filled segment
 glyphProgress :: Text
-glyphProgress = "█"
+glyphProgress = "━"
 
--- | Progress empty block
+-- | Progress bar empty segment
 glyphProgressEmpty :: Text
-glyphProgressEmpty = "░"
+glyphProgressEmpty = "─"
 
--- | Cached indicator — hollow circle
+-- | Progress bar partial (half-filled)
+glyphProgressPartial :: Text
+glyphProgressPartial = "╸"
+
+-- | Cached/reused indicator
 glyphCached :: Text
-glyphCached = "◉"
+glyphCached = "◆"
 
--- | Building indicator — rotating arrows
+-- | Building/in-progress indicator
 glyphBuilding :: Text
-glyphBuilding = "⟳"
+glyphBuilding = "◇"
+
+-- | Pending/waiting indicator
+glyphPending :: Text
+glyphPending = "○"
+
+-- | Info indicator
+glyphInfo :: Text
+glyphInfo = "ℹ"
+
+-- | Warning indicator
+glyphWarning :: Text
+glyphWarning = "⚠"
+
+-- | Error indicator
+glyphError :: Text
+glyphError = "✗"
+
+-- ════════════════════════════════════════════════════════════════════════════
+-- Typography
+-- ════════════════════════════════════════════════════════════════════════════
+
+-- $typography
+-- Typography helpers for proper spacing and punctuation.
+-- Monospace fonts benefit from careful spacing choices.
+
+-- | Emphasis — use sparingly
+em :: Text -> Text
+em t = "*" <> t <> "*"
+
+-- | Non-breaking space — keeps words together
+nbsp :: Text
+nbsp = "\x00A0"
+
+-- | Thin space — subtle separation
+thinSpace :: Text
+thinSpace = "\x2009"
+
+-- | Hair space — minimal separation
+hairSpace :: Text
+hairSpace = "\x200A"
+
+-- | En dash — ranges (1–10)
+enDash :: Text
+enDash = "–"
+
+-- | Em dash — breaks, asides
+emDash :: Text
+emDash = "—"
+
+-- | Ellipsis — single character, not three dots
+ellipsis :: Text
+ellipsis = "…"
